@@ -1,11 +1,57 @@
-export default function RegisterForm() {
-  const login = () => {
-    /***
-     * @todo Complete this function.
-     * @todo 1. Write code for form validation.
-     * @todo 2. Fetch the auth token from backend and login the user.
-     * @todo 3. Set the token in the context (See context/auth.js)
-     */
+import React, { useState } from 'react'
+import axios from '../utils/axios'
+import { useAuth } from '../context/auth'
+import { useRouter } from 'next/router'
+import { displaySuccessToast, displayInfoToast ,displayErrorToast} from '../components/Toast'
+
+
+export default function LoginForm() {
+  const { setToken } = useAuth()
+  const router = useRouter()
+
+  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
+
+  const loginFieldsAreValid = (
+    username,
+    password
+  ) => {
+    if (
+      username === '' ||
+      password === ''
+    ) {
+      displayInfoToast('Please fill all the fields correctly.');
+      return false
+    }
+    return true
+  }
+
+  const login = (e) => {
+    e.preventDefault()
+
+    if (
+      loginFieldsAreValid(username, password)
+    ) {
+
+      displayInfoToast("Please Wait...")
+      const dataForApiRequest = {
+        username: username,
+        password: password,
+      }
+
+      axios.post(
+        'auth/login/',
+        dataForApiRequest,
+      )
+        .then(function ({ data, status }) {
+          displaySuccessToast("Welcome Back!");
+          setToken(data.token)
+          router.push('/')
+        })
+        .catch(function (err) {
+          displayErrorToast('Invalid Credentials!')
+        })
+    }
   }
 
   return (
@@ -18,6 +64,8 @@ export default function RegisterForm() {
             className='block border border-grey-light w-full p-3 rounded mb-4'
             name='inputUsername'
             id='inputUsername'
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             placeholder='Username'
           />
 
@@ -26,6 +74,8 @@ export default function RegisterForm() {
             className='block border border-grey-light w-full p-3 rounded mb-4'
             name='inputPassword'
             id='inputPassword'
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder='Password'
           />
 
@@ -37,6 +87,8 @@ export default function RegisterForm() {
             Login
           </button>
         </div>
+        <br/><br/>
+        <div>Not a user yet? Register <a href="/register/" style ={{color:'blue'}}>here</a>.</div>
       </div>
     </div>
   )
