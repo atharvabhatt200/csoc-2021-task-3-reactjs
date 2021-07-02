@@ -5,19 +5,42 @@ import { useRouter } from 'next/router'
 
 const AuthContext = createContext({})
 
+export const useAuth = () => useContext(AuthContext)
+
 export const AuthProvider = ({ children }) => {
   const router = useRouter()
   const [profileName, setProfileName] = useState('')
   const [avatarImage, setAvatarImage] = useState('#')
   const [cookies, setCookies, removeCookies] = useCookies(['auth'])
-  const token = cookies.token
+  const [token, setTokenState] = useState(cookies.token);
 
-  const setToken = (newToken) => setCookies('token', newToken, { path: '/' })
-  const deleteToken = () => removeCookies('token')
+  const setToken = (newToken) => {
+    setTokenState(newToken);
+    setCookies("token", newToken, { path: "/" });
+  };
+  const deleteToken = () => {
+    setTokenState(null);
+    removeCookies("token");
+  };
+
   const logout = () => {
     deleteToken()
     router.push('/login')
   }
+
+  const loginPage = () => {
+    router.push('./login')
+  }
+
+  const homePage = () => {
+    router.push('/')
+  }
+  
+  const auth ={
+    headers: {
+        Authorization: "Token " + token
+    },
+  };
 
   useEffect(() => {
     if (token) {
@@ -44,6 +67,8 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
+        loginPage,
+        homePage,
         token,
         setToken,
         deleteToken,
@@ -52,6 +77,7 @@ export const AuthProvider = ({ children }) => {
         avatarImage,
         setAvatarImage,
         logout,
+        auth,
       }}
     >
       {children}
@@ -59,4 +85,4 @@ export const AuthProvider = ({ children }) => {
   )
 }
 
-export const useAuth = () => useContext(AuthContext)
+
